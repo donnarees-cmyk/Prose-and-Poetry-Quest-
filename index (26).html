@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prose & Poetry Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#24203a;--muted:#6b6584;--bg:#f4f1ff;--purple:#7c3aed;--orange:#f97316;--teal:#0d9488;--pink:#db2777;--blue:#2563eb;--gold:#f59e0b;--good:#16a34a;--bad:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Nunito",Arial,sans-serif;color:var(--ink);font-size:18px;line-height:1.55;min-height:100vh;
+ background:linear-gradient(180deg,#1e1b4b 0,#312e81 220px,var(--bg) 220px)}
+.wrap{max-width:1000px;margin:0 auto;padding:12px 14px 90px}
+button{font-family:inherit}
+/* HUD */
+.hud{position:sticky;top:0;z-index:20;background:rgba(30,27,75,.96);backdrop-filter:blur(6px);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.hud .av{font-size:30px;background:#fff2;border-radius:14px;width:46px;height:46px;display:flex;align-items:center;justify-content:center}
+.hud .nm{font-family:Fredoka;font-size:18px;line-height:1.1}
+.hud .nm small{display:block;font-family:Nunito;font-size:12px;opacity:.8}
+.xpwrap{flex:1 1 160px;min-width:140px}
+.xpbar{height:14px;background:#ffffff26;border-radius:99px;overflow:hidden}
+.xpfill{height:100%;width:0;background:linear-gradient(90deg,#facc15,#f97316);border-radius:99px;transition:width .8s cubic-bezier(.2,1.4,.4,1)}
+.xpl{font-size:12px;font-weight:800;opacity:.9}
+.stat{background:#ffffff1f;border-radius:99px;padding:5px 12px;font-weight:800;font-size:16px;white-space:nowrap}
+.hbtn{border:none;background:#facc15;color:#422006;border-radius:99px;padding:7px 12px;font-weight:800;cursor:pointer;font-size:15px}
+.coin{display:inline-block;animation:spin 3s linear infinite}
+@keyframes spin{0%,80%{transform:rotateY(0)}100%{transform:rotateY(360deg)}}
+/* hero */
+header.hero{color:#fff;text-align:center;padding:18px 10px 6px;position:relative}
+header.hero h1{font-family:Fredoka;font-size:clamp(30px,6vw,48px);margin:0;text-shadow:0 4px 0 #0005}
+header.hero p{margin:4px 0;opacity:.95}
+.logo{position:absolute;left:6px;top:8px;height:74px;background:#fff;border-radius:12px;padding:3px}
+.stars span{position:absolute;color:#fde68a;animation:tw 2.4s infinite ease-in-out}
+@keyframes tw{50%{opacity:.2;transform:scale(.6)}}
+/* cards */
+.card{background:#fff;border-radius:22px;padding:18px 20px;margin:14px 0;box-shadow:0 6px 20px rgba(36,32,58,.1)}
+h2{font-family:Fredoka;font-size:30px;margin:2px 0 8px;line-height:1.15}
+h3{font-family:Fredoka;font-size:23px;margin:4px 0 6px}
+.dir{background:#fff8db;border:3px dashed #facc15;border-radius:18px;padding:12px 16px;margin:12px 0}
+.dir ol{margin:4px 0;padding-left:24px}
+.help{background:#e0f2fe;border-color:#38bdf8}
+.say{border:none;background:#eef2ff;color:#3730a3;border-radius:99px;padding:6px 14px;font-weight:800;font-size:15px;cursor:pointer;margin:4px 4px 4px 0}
+.say:active{transform:scale(.96)}
+.big{border:none;color:#fff;font-family:Fredoka;font-size:22px;border-radius:18px;padding:12px 26px;cursor:pointer;background:var(--orange);box-shadow:0 5px 0 #c2410c;margin:10px 6px 4px 0}
+.big:active{transform:translateY(3px);box-shadow:0 2px 0 #c2410c}
+.big.alt{background:var(--purple);box-shadow:0 5px 0 #5b21b6}
+.big:disabled{opacity:.45;cursor:default}
+input[type=text]{font-size:20px;padding:10px 14px;border-radius:14px;border:3px solid #ddd6fe;width:100%;max-width:360px;font-weight:800;font-family:Nunito}
+/* map */
+.map{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:10px}
+.node{border:none;border-radius:22px;padding:16px;color:#fff;text-align:left;cursor:pointer;position:relative;min-height:150px;box-shadow:0 6px 0 rgba(0,0,0,.2);transition:transform .2s}
+.node:hover:not(.locked){transform:translateY(-4px) rotate(-1deg)}
+.node .e{font-size:44px;display:block;animation:bob 2.5s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.node .t{font-family:Fredoka;font-size:21px;line-height:1.15}
+.node .s{font-size:13px;font-weight:800;opacity:.9}
+.node.locked{filter:grayscale(1);opacity:.6;cursor:not-allowed}
+.node .lk{position:absolute;right:12px;top:10px;font-size:26px}
+.node .stars3{position:absolute;right:12px;bottom:10px;font-size:20px}
+/* ican */
+.ican{display:flex;gap:12px;align-items:center;background:linear-gradient(90deg,#ede9fe,#fce7f3);border-radius:18px;padding:12px 16px;margin:8px 0}
+.ican .ic{font-size:36px}
+.stdtag{display:inline-block;background:#1e1b4b;color:#fff;border-radius:10px;padding:3px 10px;font-size:13px;font-weight:800}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 2px}
+.steps span{background:#ede9fe;border-radius:99px;padding:4px 12px;font-size:14px;font-weight:800;color:#5b21b6}
+.steps span.on{background:var(--purple);color:#fff}
+.steps span.done{background:#dcfce7;color:#166534}
+/* text */
+.story{background:#fffdf4;border:3px solid #fde68a;border-radius:18px;padding:12px 18px}
+.story p{margin:8px 0}
+.pn{display:inline-block;background:#f59e0b;color:#fff;border-radius:50%;width:28px;height:28px;line-height:28px;text-align:center;font-size:14px;font-weight:800;margin-right:6px}
+.poem{background:#fdf4ff;border:3px solid #f0abfc;border-radius:18px;padding:12px 18px;margin:10px 0}
+.poem h4{font-family:Fredoka;font-size:20px;margin:0 0 4px;color:#a21caf}
+.poem .form{display:inline-block;background:#a21caf;color:#fff;border-radius:99px;padding:2px 10px;font-size:13px;font-weight:800}
+.poem pre{font-family:Nunito;font-size:18px;white-space:pre-wrap;margin:6px 0}
+details{margin:8px 0}
+summary{cursor:pointer;font-family:Fredoka;font-size:20px;color:#92400e}
+/* teach visuals */
+.teach{background:#f8fafc;border-radius:18px;padding:12px 16px;margin:10px 0}
+.chain{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;justify-content:center;margin:10px 0}
+.lnk{flex:1 1 160px;max-width:230px;border-radius:16px;padding:12px;text-align:center;color:#fff;font-weight:800;opacity:0;transform:scale(.6)}
+.lnk .em{font-size:36px;display:block}
+.arrow{align-self:center;font-size:30px;opacity:0;color:#7c3aed}
+.play .lnk,.play .arrow{animation:pop .5s forwards}
+@keyframes pop{to{opacity:1;transform:scale(1)}}
+.plant{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+.stage{flex:1 1 200px;max-width:280px;border:3px solid #bbf7d0;border-radius:18px;padding:10px;text-align:center;background:#f0fdf4;cursor:pointer}
+.stage .pl{font-size:20px;height:80px;display:flex;align-items:flex-end;justify-content:center;transition:font-size .6s cubic-bezier(.2,1.6,.4,1)}
+.stage.grown .pl{font-size:64px}
+.stage .st{display:none;font-size:16px}
+.stage.grown .st{display:block;animation:fade .5s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+.cam{position:relative;background:#0f172a;border-radius:18px;padding:16px;color:#fff;margin:10px 0;overflow:hidden}
+.chars{display:flex;justify-content:space-around;position:relative;z-index:1}
+.ch{text-align:center;font-size:48px;line-height:1}
+.ch small{display:block;font-size:14px;font-weight:800;margin-top:4px}
+.lens{position:absolute;top:8px;width:110px;height:110px;border-radius:50%;border:5px solid #facc15;box-shadow:0 0 0 2000px rgba(15,23,42,.55);transition:left .7s cubic-bezier(.3,1.3,.5,1),width .7s,height .7s,top .7s;z-index:2;pointer-events:none}
+.camtxt{margin-top:12px;background:#1e293b;border-radius:12px;padding:10px 12px;font-size:16px;min-height:66px;position:relative;z-index:3}
+.povbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;position:relative;z-index:3}
+.povbtns button{border:none;border-radius:12px;padding:8px 12px;font-weight:800;cursor:pointer;background:#334155;color:#fff}
+.povbtns button.on{background:#facc15;color:#422006}
+.forms{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:10px 0}
+.fcard{border-radius:16px;padding:12px;color:#fff;cursor:pointer;perspective:800px;min-height:150px;position:relative}
+.fcard .in{transition:transform .6s;transform-style:preserve-3d;position:relative;min-height:126px}
+.fcard.flip .in{transform:rotateY(180deg)}
+.fcard .fr,.fcard .bk{position:absolute;inset:0;backface-visibility:hidden}
+.fcard .bk{transform:rotateY(180deg);font-size:15px}
+.fcard .fe{font-size:40px}
+.fcard .fn{font-family:Fredoka;font-size:22px}
+.syl{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
+.syl span{background:#fae8ff;border-radius:8px;padding:2px 7px;font-weight:800;opacity:.25;transition:all .25s}
+.syl span.lit{opacity:1;background:#d946ef;color:#fff;transform:translateY(-3px)}
+.sylcount{font-family:Fredoka;font-size:22px;color:#a21caf;min-width:40px;display:inline-block}
+.model{border-left:6px solid #7c3aed;background:#faf5ff;border-radius:0 16px 16px 0;padding:10px 14px;margin:10px 0}
+.model b.th{color:#7c3aed}
+/* questions */
+.q{background:#faf7ff;border:3px solid #ede9fe;border-radius:18px;padding:14px;margin:12px 0}
+.qt{font-weight:800}
+.opts{display:grid;gap:8px;margin-top:8px}
+.opt{text-align:left;border:3px solid #ddd6fe;background:#fff;border-radius:14px;padding:10px 14px;font-size:17px;font-weight:700;cursor:pointer;color:var(--ink);transition:transform .1s}
+.opt:hover:not(:disabled){border-color:var(--purple);transform:translateX(3px)}
+.opt:disabled{cursor:default}
+.opt.right{background:#dcfce7;border-color:var(--good)}
+.opt.wrong{background:#fee2e2;border-color:var(--bad);text-decoration:line-through;opacity:.8}
+.opt.reveal{border-color:var(--good);border-style:dashed}
+.hint{border:none;background:#fef3c7;color:#92400e;border-radius:99px;padding:6px 14px;font-weight:800;cursor:pointer;font-size:15px}
+.hintbox{background:#fef3c7;border-radius:12px;padding:8px 12px;margin-top:8px;font-weight:700;animation:fade .4s}
+.fb{border-radius:12px;padding:10px 12px;margin-top:8px;font-weight:700;animation:fade .4s}
+.fb.good{background:#dcfce7;color:#14532d}
+.fb.try{background:#ffedd5;color:#7c2d12}
+.fb.bad{background:#fee2e2;color:#7f1d1d}
+.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+/* boss */
+.boss{text-align:center;background:linear-gradient(180deg,#450a0a,#7f1d1d);color:#fff;border-radius:22px;padding:16px;position:relative;overflow:hidden}
+.bossface{font-size:90px;display:inline-block;animation:bob 2s infinite}
+.bossface.hit{animation:hit .5s}
+@keyframes hit{0%{transform:scale(1)}30%{transform:scale(.8) rotate(-12deg);filter:brightness(3)}60%{transform:scale(1.1) rotate(8deg)}100%{transform:scale(1)}}
+.hp{height:22px;background:#0006;border-radius:99px;overflow:hidden;max-width:420px;margin:8px auto}
+.hpfill{height:100%;background:linear-gradient(90deg,#22c55e,#facc15);transition:width .6s}
+/* floats */
+.float{position:fixed;z-index:60;font-family:Fredoka;font-size:26px;color:#f59e0b;text-shadow:0 2px 0 #fff;pointer-events:none;animation:up 1.2s forwards}
+@keyframes up{to{transform:translateY(-80px);opacity:0}}
+/* badge */
+.badgepop{text-align:center;padding:10px}
+.badgepop .b{font-size:90px;display:inline-block;animation:badge 1s cubic-bezier(.2,1.6,.4,1)}
+@keyframes badge{from{transform:scale(0) rotate(-180deg)}to{transform:scale(1) rotate(0)}}
+.blist{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.blist span{background:#f5f3ff;border-radius:14px;padding:6px 10px;font-weight:800}
+.blist span.no{opacity:.35;filter:grayscale(1)}
+/* shop */
+.modal{display:none;position:fixed;inset:0;background:#0009;z-index:40;padding:14px;overflow:auto}
+.modal.on{display:block}
+.mbox{background:#fff;max-width:760px;margin:30px auto;border-radius:22px;padding:18px}
+.shop{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.item{border:3px solid #ede9fe;border-radius:16px;padding:10px;text-align:center;background:#faf7ff}
+.item .ie{font-size:46px}
+.item button{border:none;border-radius:12px;padding:6px 12px;font-weight:800;cursor:pointer;background:var(--gold);color:#422006;margin-top:4px}
+.item button:disabled{background:#e5e7eb;color:#6b7280;cursor:default}
+table.rt{width:100%;border-collapse:collapse}
+table.rt td,table.rt th{padding:8px;border-bottom:2px solid #ede9fe;text-align:left}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:70}
+.saved{text-align:center;font-size:14px;color:var(--muted)}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+
+<div class="hud" id="hud">
+  <div class="av" id="hAv">🧑‍🎓</div>
+  <div class="nm"><span id="hName">Reader</span><small id="hTitle">Rookie Reader</small></div>
+  <div class="xpwrap"><div class="xpl" id="hLvl">Level 1 • 0 XP</div><div class="xpbar"><div class="xpfill" id="hXp"></div></div></div>
+  <div class="stat"><span class="coin">🪙</span> <span id="hCoins">0</span></div>
+  <div class="stat">🔥 <span id="hStreak">0</span></div>
+  <button class="hbtn" id="shopBtn">🛒 Shop</button>
+  <button class="hbtn" id="mapBtn" style="background:#a5b4fc;color:#1e1b4b">🗺️ Map</button>
+</div>
+
+<div class="wrap">
+<header class="hero">
+  <img class="logo" src="logo.png" alt="Literacy Locksmith logo" onerror="this.style.display='none'">
+  <div class="stars"><span style="left:8%;top:20%">✦</span><span style="left:85%;top:15%;animation-delay:.6s">✦</span><span style="left:70%;top:60%;animation-delay:1.2s">✦</span><span style="left:20%;top:70%;animation-delay:1.8s">✦</span></div>
+  <h1>📖 Prose & Poetry Quest</h1>
+  <p>FAST Review • Reading Prose and Poetry</p>
+</header>
+
+<main id="view"></main>
+<p class="saved">💾 Your progress saves automatically on this iPad.</p>
+</div>
+
+<div class="modal" id="shop"><div class="mbox">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <h2 style="margin:0">🛒 Avatar Shop</h2><div class="stat" style="background:#fef3c7">🪙 <span id="sCoins">0</span></div>
+    <button class="big alt" style="font-size:17px;padding:8px 16px;margin:0" id="shopClose">✖ Close</button>
+  </div>
+  <p>Earn 🪙 coins by answering correctly. Spend them on new avatars! (Avatars are just for fun. They never change your score.)</p>
+  <div class="shop" id="shopGrid"></div>
+</div></div>
+
+<script>
+/* =================== CONTENT =================== */
+const STORY = {title:"The Broken Telescope", paras:[
+"My little brother Leo and I had been building a telescope for the science fair for three weeks. Grandma had given us the old lens from Grandpa's telescope, and she made us promise to take good care of it.",
+"\"Let me hold the lens,\" Leo begged on Saturday morning. \"You never let me do anything!\" \"Because you'll break it,\" I snapped, pulling it away. Leo grabbed for it anyway. The lens slipped from my fingers and cracked against the kitchen floor.",
+"For a long moment, nobody moved. Leo's face turned red, and he ran to his room and slammed the door. I stared at the crack and blamed him in my head. If he had just listened, this never would have happened.",
+"That night, Grandma found me sitting on the back steps. She didn't yell. She just sat beside me and said, \"Your grandpa and I broke plenty of things together. The fixing is what we remembered.\"",
+"The next morning, I knocked on Leo's door. \"I'm sorry I said you'd break it,\" I told him. \"I grabbed too hard, too.\" Leo opened the door a crack. \"Can we fix it together?\" he asked. We spent the whole day gluing a new frame and using a magnifying glass from Grandma's sewing kit as our lens.",
+"Our telescope didn't win first place. But when Leo and I looked through it at the moon that night, with Grandma standing behind us, it felt like we had won something better."
+]};
+const POEMS = [
+ {id:"haiku",form:"Haiku",title:"Moon Through Glass",text:"Cracked lens, glued with care\ntwo small hands lift it skyward\nthe moon still shines through"},
+ {id:"lim",form:"Limerick",title:"The Comet",text:"A boy with a telescope new\nSaid, \"Look at the stars! There's a few!\"\nBut he pointed it wrong,\nAt the cat all along,\nAnd the \"comet\" was Whiskers, who flew!"},
+ {id:"free",form:"Free Verse",title:"Slammed Door",text:"I stood in the hallway\n                staring\nat a door that would not open.\n\nSorry\nis such a small word\nto carry\n        all the way\n                across a hallway."},
+ {id:"son",form:"Sonnet",title:"The Old Lens",text:"My grandpa built a telescope by hand,\nHe polished every piece until it shone.\nHe taught me how the stars were mapped and planned,\nAnd named each one as if it were his own.\nNow Grandpa's gone, but still his lens remains,\nA circle full of nights he used to see.\nI hold it close through sunny days and rains,\nAnd feel that he is looking out with me.\nOne day the glass slipped down and cracked in two;\nI feared the stars inside it all were gone.\nBut Grandma said, \"There's one thing left to do:\nJust fix it, child. The sky goes on and on.\"\n   So broken things can still hold up the light,\n   If we will mend them, side by side, tonight."}
+];
+const BOSS_STORY = {title:"The Relay", paras:[
+"Jada had been the fastest runner on the sixth-grade relay team all season, and she knew it. When Coach Ruiz announced that Priya would run the final leg at the championship meet, Jada crossed her arms. \"She's slower than me,\" Jada muttered, loud enough for Priya to hear.",
+"Priya stared at her shoes. At practice that week, she dropped the baton twice. Each time, Jada rolled her eyes, and each time, Priya's hands shook a little more.",
+"On Thursday, Jada found Priya alone by the bleachers, wiping her eyes. \"I can't do it,\" Priya whispered. \"Everyone thinks I'll lose it for us.\" Jada felt something twist in her stomach. She remembered her first meet, when she had tripped at the start and an eighth grader had helped her up.",
+"\"Hold the baton like this,\" Jada said, kneeling beside her. \"Don't look back. Just trust that I'll put it in your hand.\" They practiced the handoff until the sun went down.",
+"At the meet, Jada raced into the final exchange and pressed the baton firmly into Priya's palm. Priya didn't look back once. The team finished second, but as Priya crossed the line, Jada was the first one cheering."
+]};
+const BOSS_POEM = {form:"Haiku",title:"Handoff",text:"Open palm, steady\nthe baton finds its new home\nrun, and don't look back"};
+
+const WORLDS = [
+{ id:"w1", emoji:"⚡", title:"Character Clash", color:"#ea580c", std:"ELA.6.R.1.1", badge:"🕵️", badgeName:"Plot Detective",
+  stdText:"Analyze how the interaction between characters contributes to the development of a plot in a literary text.",
+  ican:"I can explain how characters' words and actions toward each other move the plot forward.",
+  text:"story",
+  teach:`<p><b>Characters interact</b> when they talk, argue, help, or react to each other. Each interaction can <b>cause</b> something new to happen in the plot.</p>
+  <p>Think of it like a chain reaction. Tap <b>▶ Play the Chain</b> to watch!</p>
+  <div class="chain" id="chain">
+   <div class="lnk" style="background:#f97316;animation-delay:.1s"><span class="em">💬</span>ACTION<br><small>A character says or does something</small></div>
+   <div class="arrow" style="animation-delay:.6s">➜</div>
+   <div class="lnk" style="background:#db2777;animation-delay:1s"><span class="em">😠</span>REACTION<br><small>Another character responds</small></div>
+   <div class="arrow" style="animation-delay:1.5s">➜</div>
+   <div class="lnk" style="background:#7c3aed;animation-delay:1.9s"><span class="em">💥</span>PLOT CHANGE<br><small>A problem starts, grows, or gets solved</small></div>
+  </div>
+  <button class="say" id="playChain">▶ Play the Chain</button>
+  <p>🔎 <b>FAST question words to watch for:</b> <i>"How does the interaction between ___ and ___ affect the plot?"</i> or <i>"How does ___'s response move the story forward?"</i></p>`,
+  model:`<p><b class="th">🧠 Watch me think:</b> In paragraph 2, Mia snaps, "Because you'll break it." <b>(Action)</b> Leo grabs for the lens anyway. <b>(Reaction)</b> The lens cracks on the floor. <b>(Plot change: the main problem begins!)</b></p>
+  <p><b class="th">So my answer would be:</b> The argument causes the lens to break, which creates the conflict of the story.</p>
+  <p>✅ <b>Tip:</b> Look for what happens <b>right after</b> characters interact. That is usually the plot change.</p>`,
+  checks:[
+   {q:"How does the argument between Mia and Leo in paragraph 2 affect the events of the story?",o:["It causes the lens to break, which creates the main problem.","It makes Grandma decide to buy a new telescope.","It helps Mia and Leo win first place.","It makes Leo quit the science fair."],a:0,hint:"Reread paragraph 2. What happens right after Leo grabs for the lens?",why:"The argument leads to the lens cracking. That is the main problem (conflict) of the story."},
+   {q:"How does Grandma's conversation with Mia in paragraph 4 move the plot forward?",o:["It makes Mia even angrier at Leo.","It leads Mia to apologize to Leo the next morning.","It shows that Grandma will fix the telescope herself.","It causes Mia to give up on the science fair."],a:1,hint:"What does Mia do the very next morning, in paragraph 5?",why:"After Grandma's words, Mia knocks on Leo's door and apologizes. Grandma's interaction changes the direction of the plot."},
+   {q:"Which interaction leads to the resolution (the problem being solved)?",o:["Leo slamming his bedroom door","Mia snapping at Leo about the lens","Mia apologizing and Leo asking, \"Can we fix it together?\"","Grandma giving them Grandpa's lens"],a:2,hint:"The resolution is when the problem gets solved. When do Mia and Leo start fixing the telescope?",why:"Mia's apology and Leo's question lead them to fix the telescope together. That solves the problem."}
+  ]},
+{ id:"w2", emoji:"🌱", title:"Theme Garden", color:"#16a34a", std:"ELA.6.R.1.2", badge:"🌻", badgeName:"Theme Gardener",
+  stdText:"Analyze the development of stated or implied theme(s) throughout a literary text.",
+  ican:"I can explain how a theme grows from the beginning to the end of a story.",
+  text:"story",
+  teach:`<p>A <b>topic</b> is one or two words, like <i>family</i> or <i>friendship</i>. A <b>theme</b> is a <b>full sentence message</b> about life, like <i>"Mistakes can bring people closer when they forgive each other."</i></p>
+  <p>A theme <b>grows</b> like a plant. Tap each pot to grow the theme!</p>
+  <div class="plant">
+   <div class="stage" data-stage><div class="pl">🌰</div><b>Beginning</b><div class="st">🌰 <b>Seed:</b> The author plants clues. Grandpa's lens matters to the family.</div></div>
+   <div class="stage" data-stage><div class="pl">🌿</div><b>Middle</b><div class="st">🌿 <b>Sprout:</b> Characters struggle and change. Mia blames Leo, then hears Grandma's wise words.</div></div>
+   <div class="stage" data-stage><div class="pl">🌻</div><b>End</b><div class="st">🌻 <b>Bloom:</b> The message is clear. Fixing things together matters more than winning.</div></div>
+  </div>
+  <p>🔎 <b>FAST question words:</b> <i>"Which detail best shows how the theme develops?"</i> or <i>"Which statement best expresses a theme?"</i></p>
+  <p>✅ <b>Theme test:</b> Is it a full sentence? Could it teach a lesson to <b>anyone</b>, not just these characters? Then it's a theme!</p>`,
+  model:`<p><b class="th">🧠 Watch me think:</b> In paragraph 3, Mia "blamed him in my head." She hasn't learned the lesson yet. In paragraph 4, Grandma says, "The fixing is what we remembered." That's a big clue! By paragraph 6, Mia says it "felt like we had won something better."</p>
+  <p><b class="th">So the theme is:</b> Working together after a mistake matters more than winning.</p>
+  <p>✅ <b>Tip:</b> Pay attention to what a character <b>learns</b> and to any wise advice from an older character.</p>`,
+  checks:[
+   {q:"Which statement is a THEME of the story (not just a topic)?",o:["Brothers and sisters","Telescopes and the moon","Working together after a mistake matters more than winning.","The science fair"],a:2,hint:"A theme is a full sentence message about life. Which choice is a complete sentence?",why:"Only this choice is a full sentence with a life lesson. The others are topics."},
+   {q:"Which detail BEST shows how the theme develops by the END of the story?",o:["\"I stared at the crack and blamed him in my head.\"","\"It felt like we had won something better.\"","\"Leo's face turned red.\"","\"Grandma had given us the old lens.\""],a:1,hint:"Look at the last paragraph. What does Mia realize?",why:"This last line shows Mia learned that fixing things together was better than winning. The theme is in full bloom!"},
+   {q:"How does Grandma's line in paragraph 4, \"The fixing is what we remembered,\" help develop the theme?",o:["It shows Grandma is angry about the broken lens.","It explains how to build a telescope.","It hints that fixing problems together is what people treasure.","It shows that Grandpa was clumsy."],a:2,hint:"What does Grandma say people remember: the breaking or the fixing?",why:"Grandma's words plant the message that working together to fix things is what matters most."}
+  ]},
+{ id:"w3", emoji:"👀", title:"Point of View Lens", color:"#2563eb", std:"ELA.6.R.1.3", badge:"🔭", badgeName:"Perspective Pro",
+  stdText:"Explain the influence of multiple narrators and/or shifts in point of view in a literary text.",
+  ican:"I can explain how the narrator and point of view shape what readers know and feel.",
+  text:"story",
+  teach:`<p>The <b>narrator</b> is who tells the story. The <b>point of view</b> is like a camera. It decides <b>whose thoughts</b> the reader can see. Tap a button to move the camera!</p>
+  <div class="cam" id="cam">
+    <div class="lens" id="lens"></div>
+    <div class="chars"><div class="ch">👧<small>Mia</small></div><div class="ch">👦<small>Leo</small></div><div class="ch">👵<small>Grandma</small></div></div>
+    <div class="camtxt" id="camtxt">Tap a point of view below 👇</div>
+    <div class="povbtns">
+      <button data-pov="first">1st Person (Mia)</button>
+      <button data-pov="third">3rd Person Limited (Leo)</button>
+      <button data-pov="omni">3rd Person Omniscient</button>
+      <button data-pov="grandma">Switch to Grandma</button>
+    </div>
+  </div>
+  <p><b>1st person:</b> uses <i>I, me, we</i>. The narrator is in the story and only knows <b>their own</b> thoughts.<br>
+  <b>3rd person limited:</b> uses <i>he, she, they</i>. Readers know <b>one</b> character's thoughts.<br>
+  <b>3rd person omniscient:</b> the narrator knows <b>everyone's</b> thoughts.</p>
+  <p>🔎 <b>FAST question words:</b> <i>"How would the story change if it were told from ___'s point of view?"</i> or <i>"How does the shift in narrator affect the reader?"</i></p>`,
+  model:`<p><b class="th">🧠 Watch me think:</b> The story uses "I" and "my," and Mia is a character, so it's <b>first person</b>. I know Mia "blamed him in my head," but I <b>don't</b> know what Leo was thinking behind his slammed door.</p>
+  <p><b class="th">If Grandma told the story,</b> I might learn how she felt about Grandpa's lens breaking and why she chose not to yell.</p>
+  <p>✅ <b>Tip:</b> A new narrator = new thoughts and feelings the reader gets to see.</p>`,
+  checks:[
+   {q:"From which point of view is \"The Broken Telescope\" told?",o:["First person, by Mia","First person, by Leo","Third person omniscient","Third person, by Grandma"],a:0,hint:"Look for the words \"I\" and \"my.\" Who is saying them?",why:"Mia tells the story using \"I\" and \"my,\" so it's first person."},
+   {q:"How would the story change if it were told from GRANDMA'S point of view?",o:["Readers would learn how she felt about Grandpa's lens breaking and why she didn't yell.","Readers would know less about the telescope.","The lens would not break.","Leo would become the main character."],a:0,hint:"A new narrator lets readers see that person's thoughts. What might Grandma be thinking?",why:"Grandma's point of view would show her feelings about Grandpa's lens and her choice to stay calm."},
+   {q:"Which detail can readers know ONLY because Mia is the narrator?",o:["\"Leo grabbed for it anyway.\"","\"I stared at the crack and blamed him in my head.\"","\"Our telescope didn't win first place.\"","\"Grandma found me sitting on the back steps.\""],a:1,hint:"Which choice shows a private thought inside Mia's head?",why:"Only the narrator's own thoughts, like blaming Leo \"in my head,\" can be known in first person."},
+   {q:"Suppose the author added a second narrator, so paragraph 3 is retold by Leo. What is the MAIN effect?",o:["The story would get shorter.","Readers would understand both characters' feelings about the same event.","The theme would disappear.","Readers would know less about Leo."],a:1,hint:"Two narrators means two sets of thoughts about the same moment.",why:"Multiple narrators let readers see the same event from two sides."}
+  ]},
+{ id:"w4", emoji:"🎵", title:"Poetry Forms Studio", color:"#c026d3", std:"ELA.6.R.1.4", badge:"🎤", badgeName:"Poetry Ace",
+  stdText:"Describe the impact of various poetic forms on meaning and style.",
+  ican:"I can describe how a poem's form (haiku, limerick, free verse, sonnet) affects its meaning and style.",
+  text:"poems",
+  teach:`<p>A poem's <b>form</b> is its shape and rules. Poets choose a form on purpose, because the form changes how the poem <b>sounds</b> and <b>feels</b>. Tap each card to flip it!</p>
+  <div class="forms">
+   <div class="fcard" style="background:#0d9488"><div class="in"><div class="fr"><div class="fe">🍃</div><div class="fn">Haiku</div><small>Tap to flip</small></div><div class="bk"><b>Rules:</b> 3 lines, 5-7-5 syllables, often nature.<br><b>Effect:</b> short and calm, like a <b>snapshot</b> of one moment.</div></div></div>
+   <div class="fcard" style="background:#ea580c"><div class="in"><div class="fr"><div class="fe">🤪</div><div class="fn">Limerick</div><small>Tap to flip</small></div><div class="bk"><b>Rules:</b> 5 lines, AABBA rhyme, bouncy rhythm.<br><b>Effect:</b> <b>silly and playful</b>, often with a funny twist at the end.</div></div></div>
+   <div class="fcard" style="background:#2563eb"><div class="in"><div class="fr"><div class="fe">🌊</div><div class="fn">Free Verse</div><small>Tap to flip</small></div><div class="bk"><b>Rules:</b> no set rhyme or rhythm. The poet chooses line breaks.<br><b>Effect:</b> sounds like <b>real thoughts</b>. Line breaks and spaces show <b>strong feelings</b>.</div></div></div>
+   <div class="fcard" style="background:#be123c"><div class="in"><div class="fr"><div class="fe">💌</div><div class="fn">Sonnet</div><small>Tap to flip</small></div><div class="bk"><b>Rules:</b> 14 lines, a rhyme pattern, ends with a 2-line <b>couplet</b>.<br><b>Effect:</b> <b>serious and organized</b>. The ending couplet sums up the big idea.</div></div></div>
+  </div>
+  <h3>🔢 Haiku Syllable Counter</h3>
+  <div id="sylBox"></div>
+  <button class="say" id="countSyl">▶ Count the Syllables</button>
+  <p>🔎 <b>FAST question words:</b> <i>"How does the free verse form help show the speaker's feelings?"</i> or <i>"How does the structure of the poem contribute to its meaning?"</i></p>`,
+  model:`<p><b class="th">🧠 Watch me think:</b> In "Slammed Door," the word <i>staring</i> sits alone on its own line, pushed far to the right. Free verse lets the poet put it there. It makes me <b>pause</b>, just like the speaker is frozen in the hallway.</p>
+  <p><b class="th">So my answer would be:</b> The free verse line breaks slow the reader down and show how hard it is for the speaker to say sorry.</p>
+  <p>✅ <b>Tip:</b> Always connect the <b>form</b> (rules) to the <b>feeling</b> (effect).</p>`,
+  checks:[
+   {q:"How does the HAIKU form affect \"Moon Through Glass\"?",o:["Its long lines tell a whole story from beginning to end.","Its short 5-7-5 lines capture one quiet moment, like a snapshot.","Its rhyme makes the poem silly.","Its 14 lines build a serious argument."],a:1,hint:"Haiku are tiny poems. Do they tell a long story or show one moment?",why:"The three short lines freeze one moment: the moon shining through the fixed lens."},
+   {q:"How do the AABBA rhyme and bouncy rhythm affect the limerick \"The Comet\"?",o:["They create a silly, playful tone that sets up the funny ending.","They make the poem sad and serious.","They show the speaker's private thoughts.","They make the poem sound like a news report."],a:0,hint:"What happens at the end of the limerick? Is it serious or funny?",why:"The bouncy rhymes build up to the joke: the \"comet\" was really the cat!"},
+   {q:"How does the FREE VERSE form help show the speaker's feelings in \"Slammed Door\"?",o:["The strict rhyme makes the speaker sound happy.","The uneven line breaks and spaces slow the reader down and show how hard it is to say sorry.","The 5-7-5 pattern describes nature.","The couplet at the end tells a joke."],a:1,hint:"Look at the word \"staring\" and the last lines. Why are they spread out?",why:"The spread-out lines make readers slow down, showing how far \"sorry\" feels across the hallway."},
+   {q:"In the sonnet \"The Old Lens,\" what is the effect of the final two lines (the couplet)?",o:["They introduce a brand-new character.","They tell a joke to end the poem.","They sum up the message that broken things can be mended together.","They describe the weather."],a:2,hint:"Reread the last two indented lines. What big idea do they state?",why:"Sonnets often end with a couplet that sums up the main idea. Here it's mending broken things together."}
+  ]}
+];
+
+const BOSS = [
+ {q:"How does Jada's comment in paragraph 1 affect Priya and the plot?",o:["It shakes Priya's confidence, which leads to her dropping the baton at practice.","It makes Coach Ruiz choose Jada for the final leg.","It makes Priya run faster at practice.","It causes the team to win first place."],a:0,std:"w1"},
+ {q:"How does the conversation by the bleachers in paragraph 3 change the plot?",o:["Priya decides to quit the team.","Jada decides to help Priya practice instead of criticizing her.","Coach Ruiz cancels the meet.","Jada tells Coach she should run instead."],a:1,std:"w1"},
+ {q:"Which statement BEST expresses a theme of \"The Relay\"?",o:["Running is a fun sport.","Helping others succeed can matter more than being the star.","Relay teams have four runners.","Coaches make hard choices."],a:1,std:"w2"},
+ {q:"Which detail BEST shows how the theme develops by the end?",o:["\"Jada crossed her arms.\"","\"Priya stared at her shoes.\"","\"As Priya crossed the line, Jada was the first one cheering.\"","\"She dropped the baton twice.\""],a:2,std:"w2"},
+ {q:"From which point of view is \"The Relay\" told?",o:["First person, by Priya","Third person, focusing on Jada's thoughts and feelings","First person, by Coach Ruiz","Second person, using \"you\""],a:1,std:"w3"},
+ {q:"How would the story change if it were told from PRIYA'S point of view?",o:["Readers would understand how Jada's comments and help made Priya feel.","Readers would learn less about Priya.","The team would win first place.","The story would be a poem."],a:0,std:"w3"},
+ {q:"How does the haiku form affect the poem \"Handoff\"?",o:["Its three short lines capture the single moment of the baton handoff.","Its 14 lines tell the whole race.","Its silly rhymes make the race funny.","Its long, uneven lines show anger."],a:0,std:"w4"},
+ {q:"If \"Handoff\" were rewritten as a LIMERICK, how would its tone MOST likely change?",o:["It would become more calm and focused.","It would become silly and bouncy instead of calm and focused.","It would become a 14-line serious poem.","The tone would not change at all."],a:1,std:"w4"}
+];
+
+const SHOP = [
+ {e:"🦊",n:"Fox",c:15},{e:"🐼",n:"Panda",c:15},{e:"🦉",n:"Wise Owl",c:25},{e:"🐉",n:"Dragon",c:40},
+ {e:"🦄",n:"Unicorn",c:40},{e:"🤖",n:"Robot",c:50},{e:"🦁",n:"Lion",c:60},{e:"👑",n:"Royal Reader",c:80}
+];
+const TITLES=[[0,"Rookie Reader"],[60,"Story Scout"],[140,"Plot Explorer"],[220,"Literary Hero"],[300,"Legendary Reader"]];
+
+/* =================== STATE =================== */
+const KEY="proseQuest_v1";
+if(new URLSearchParams(location.search).get("reset")==="1"){try{localStorage.removeItem(KEY)}catch(e){}}
+let S={name:"",view:"start",xp:0,coins:0,streak:0,best:0,avatar:"🧑‍🎓",owned:[],ans:{},hints:{},step:{},badges:[],boss:{},bossDone:false};
+try{const r=localStorage.getItem(KEY); if(r) S=Object.assign(S,JSON.parse(r));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+/* =================== SPEECH =================== */
+let voice=null;
+function pickVoice(){const v=speechSynthesis.getVoices(); voice=v.find(x=>x.name==="Google US English")||v.find(x=>x.lang==="en-US"&&/samantha|female/i.test(x.name))||v.find(x=>x.lang==="en-US")||null;}
+if("speechSynthesis" in window){pickVoice(); speechSynthesis.onvoiceschanged=pickVoice;}
+function speak(t){ if(!("speechSynthesis" in window))return; speechSynthesis.cancel();
+  t=t.replace(/ELA\.[A-Z0-9.]+/g,"").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/gu,"").replace(/[➜▶✦]/g,"").replace(/\s+/g," ").trim();
+  const chunks=t.match(/[^.!?]+[.!?"]*\s*/g)||[t];
+  chunks.forEach(c=>{const u=new SpeechSynthesisUtterance(c); if(voice)u.voice=voice; u.lang="en-US"; u.rate=.95; speechSynthesis.speak(u);});
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-say]"); if(!b)return; const el=document.querySelector(b.dataset.say); if(el) speak(el.innerText);});
+
+/* =================== HELPERS =================== */
+const $=s=>document.querySelector(s);
+const V=()=>$("#view");
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function order(len,seed){const a=[...Array(len).keys()]; let x=seed*7919+13; for(let i=len-1;i>0;i--){x=(x*9301+49297)%233280; const j=Math.floor(x/233280*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a;}
+function seedOf(k){let h=0; for(const ch of k) h=(h*31+ch.charCodeAt(0))%100000; return h;}
+function level(){return Math.floor(S.xp/60)+1}
+function title(){let t=TITLES[0][1]; TITLES.forEach(([x,n])=>{if(S.xp>=x)t=n}); return t;}
+function hud(){
+  $("#hName").textContent=S.name||"Reader"; $("#hAv").textContent=S.avatar; $("#hTitle").textContent=title();
+  $("#hLvl").textContent=`Level ${level()} • ${S.xp} XP`; $("#hXp").style.width=((S.xp%60)/60*100)+"%";
+  $("#hCoins").textContent=S.coins; $("#hStreak").textContent=S.streak; $("#sCoins").textContent=S.coins;
+}
+function floatText(txt,x,y,color){const d=document.createElement("div"); d.className="float"; d.textContent=txt; d.style.left=(x||innerWidth/2)+"px"; d.style.top=(y||innerHeight/2)+"px"; if(color)d.style.color=color; document.body.appendChild(d); setTimeout(()=>d.remove(),1300);}
+function reward(xp,coins,x,y){S.xp+=xp; S.coins+=coins; floatText(`+${xp} XP`,x-40,y-20); if(coins) setTimeout(()=>floatText(`+${coins} 🪙`,x+20,y-10,"#ca8a04"),200); save(); hud();}
+function worldDone(i){const w=WORLDS[i]; return w.checks.every((c,j)=>S.ans[w.id+"-"+j]!==undefined && S.ans[w.id+"-"+j].done);}
+function unlocked(i){return i===0 || worldDone(i-1);}
+function storyHTML(st,open){return `<details ${open?"open":""}><summary>📖 ${st.title} (tap to open/close)</summary>
+  <button class="say" data-say="#st-${st.title.replace(/\W/g,'')}">🔊 Read the Story to Me</button>
+  <div class="story" id="st-${st.title.replace(/\W/g,'')}">${st.paras.map((p,i)=>`<p><span class="pn">${i+1}</span>${esc(p)}</p>`).join("")}</div></details>`;}
+function poemHTML(p,id){return `<div class="poem" id="pm-${id}"><span class="form">${p.form}</span><h4>${esc(p.title)}</h4><pre>${esc(p.text)}</pre></div><button class="say" data-say="#pm-${id}">🔊 Read "${esc(p.title)}" to Me</button>`;}
+
+/* =================== VIEWS =================== */
+function go(v){S.view=v; save(); render(); window.scrollTo({top:0,behavior:"smooth"});}
+function render(){
+  hud(); speechSynthesis&&speechSynthesis.cancel();
+  if(S.view==="start") return vStart();
+  if(S.view==="map") return vMap();
+  if(S.view.startsWith("w")) return vWorld(+S.view.slice(1)-1);
+  if(S.view==="boss") return vBoss();
+  if(S.view==="results") return vResults();
+}
+function vStart(){
+  V().innerHTML=`<div class="card">
+   <h2>Welcome, Reader! 👋</h2>
+   <button class="say" data-say="#intro">🔊 Read to Me</button>
+   <div id="intro"><p>On this quest, you will review the skills from the <b>Reading Prose and Poetry</b> part of the FAST test. You will travel through <b>4 worlds</b>, then battle the <b>FAST Boss</b>!</p>
+   <p>In each world you will: 🎯 read the <b>I Can</b> goal, 📚 <b>learn</b> the skill with animations, 🧠 <b>watch</b> how a good reader thinks, then ✅ <b>check</b> your understanding.</p></div>
+   <div class="dir"><b>📱 iPad Directions:</b><ol>
+    <li>✍️ Type your <b>first name and last initial</b>.</li>
+    <li>🔊 Tap <b>Read to Me</b> on anything to hear it. Use headphones!</li>
+    <li>🗺️ Complete the worlds <b>in order</b>. Each world unlocks the next.</li>
+    <li>💡 Stuck on a check? Tap <b>Hint</b>. If you miss it, you get a <b>teaching tip and one more try</b>.</li>
+    <li>⚔️ The Boss Battle is <b>one try per question</b>, just like the real test.</li>
+    <li>💾 Your work saves automatically. 📸 Screenshot your results and upload them to Canvas.</li></ol></div>
+   <div class="dir help"><b>🙋 Working on your own today!</b> If you get stuck, try these steps before asking anyone:
+    <ol><li>🔊 Listen again with <b>Read to Me</b>.</li><li>🧠 Reread the <b>Watch Me Think</b> example.</li><li>📖 Go back to the story or poem and find the paragraph.</li><li>💡 Use a <b>Hint</b>. Every answer explains <b>why</b>, so you learn either way!</li></ol></div>
+   <h3>🎮 How to Earn Rewards</h3>
+   <p>⭐ <b>+10 XP and +5 🪙</b> for a correct first try • 💡 <b>+7 XP</b> after a hint • 🔁 <b>+5 XP</b> on a second try • 🔥 Build streaks! • 🏅 Earn a <b>badge</b> for each world • 🛒 Spend coins on <b>avatars</b> in the Shop!</p>
+   <p><b>Your name:</b><br><input type="text" id="nameIn" placeholder="First name + last initial" value="${esc(S.name)}" autocomplete="off"></p>
+   <button class="big" id="startBtn">🚀 Start My Quest!</button></div>`;
+  $("#nameIn").oninput=e=>{S.name=e.target.value; save(); hud();};
+  $("#startBtn").onclick=()=>{ if(!S.name.trim()){ $("#nameIn").classList.add("shake"); $("#nameIn").focus(); setTimeout(()=>$("#nameIn").classList.remove("shake"),400); return;} go("map"); };
+}
+function vMap(){
+  const allDone=WORLDS.every((w,i)=>worldDone(i));
+  V().innerHTML=`<div class="card"><h2>🗺️ Quest Map</h2>
+   <p>Tap a world to play. Finish each world to unlock the next one!</p>
+   <div class="map">${WORLDS.map((w,i)=>{const lock=!unlocked(i), done=worldDone(i);
+     const firsts=w.checks.filter((c,j)=>S.ans[w.id+"-"+j]?.first).length;
+     const stars=done?(firsts===w.checks.length?"⭐⭐⭐":firsts>=w.checks.length-1?"⭐⭐":"⭐"):"";
+     return `<button class="node ${lock?"locked":""}" data-world="${i}" style="background:${w.color}">
+      ${lock?'<span class="lk">🔒</span>':done?'<span class="lk">✅</span>':''}
+      <span class="e" style="animation-delay:${i*.3}s">${w.emoji}</span><div class="t">World ${i+1}: ${w.title}</div><div class="s">${w.std}</div><span class="stars3">${stars}</span></button>`;}).join("")}
+     <button class="node ${allDone?"":"locked"}" data-boss style="background:#7f1d1d">${allDone?(S.bossDone?'<span class="lk">✅</span>':''):'<span class="lk">🔒</span>'}
+      <span class="e">🐲</span><div class="t">FAST Boss Battle</div><div class="s">All 4 standards • One try each</div></button>
+   </div>
+   <h3 style="margin-top:16px">🏅 My Badges</h3>
+   <div class="blist">${WORLDS.map(w=>`<span class="${S.badges.includes(w.id)?"":"no"}">${w.badge} ${w.badgeName}</span>`).join("")}<span class="${S.bossDone?"":"no"}">🏆 Boss Slayer</span></div>
+   ${S.bossDone?'<button class="big alt" data-go="results">🏆 See My Results</button>':''}</div>`;
+}
+function stepsBar(i,step){const names=["🎯 Goal","📚 Learn","🧠 Watch Me Think","✅ Check","🏅 Badge"];
+  return `<div class="steps">${names.map((n,k)=>`<span class="${k===step?"on":k<step?"done":""}">${n}</span>`).join("")}</div>`;}
+function vWorld(i){
+  const w=WORLDS[i]; if(!unlocked(i)) return go("map");
+  let step=S.step[w.id]??0; if(worldDone(i)&&step<4) step=3;
+  let body="";
+  const hdr=`<div class="card" style="border-top:10px solid ${w.color}"><div style="font-size:14px;font-weight:800;color:${w.color}">WORLD ${i+1}</div><h2>${w.emoji} ${w.title}</h2>${stepsBar(i,step)}</div>`;
+  if(step===0){
+    body=`<div class="card"><h3>🎯 Today's Goal</h3>
+     <div id="goal"><div class="ican"><span class="ic">🎯</span><div><b>I can</b> ${esc(w.ican.replace(/^I can /,""))}</div></div>
+     <p><span class="stdtag">Florida B.E.S.T. ${w.std}</span> ${esc(w.stdText)}</p></div>
+     <button class="say" data-say="#goal">🔊 Read to Me</button><br>
+     <button class="big" data-step="1">Let's Learn! ➜</button></div>`;
+  } else if(step===1){
+    body=`<div class="card"><h3>📚 Learn It</h3><button class="say" data-say="#teach">🔊 Read to Me</button><div class="teach" id="teach">${w.teach}</div>
+     <button class="big alt" data-step="0">⬅ Back</button><button class="big" data-step="2">Next: Watch Me Think ➜</button></div>`;
+  } else if(step===2){
+    body=`<div class="card"><h3>🧠 Watch Me Think</h3>
+     ${w.text==="story"?storyHTML(STORY,true):POEMS.map(p=>poemHTML(p,p.id)).join("")}
+     <button class="say" data-say="#model">🔊 Read the Thinking to Me</button><div class="model" id="model">${w.model}</div>
+     <button class="big alt" data-step="1">⬅ Back</button><button class="big" data-step="3">I'm Ready to Check! ➜</button></div>`;
+  } else if(step===3){
+    body=`<div class="card"><h3>✅ Check Your Understanding</h3><p>Use the ${w.text==="story"?"story":"poems"} to help you. Tap 💡 Hint if you need it!</p>
+     ${w.text==="story"?storyHTML(STORY,false):`<details><summary>🎵 The Poems (tap to open/close)</summary>${POEMS.map(p=>poemHTML(p,"c"+p.id)).join("")}</details>`}
+     <div id="checks">${w.checks.map((c,j)=>qHTML(w,j)).join("")}</div>
+     <button class="big alt" data-step="2">⬅ Review Watch Me Think</button>
+     <button class="big" data-step="4" ${worldDone(i)?"":"disabled"} id="toBadge">${worldDone(i)?"Claim My Badge! 🏅":"Answer all checks to continue"}</button></div>`;
+  } else {
+    if(!S.badges.includes(w.id)){S.badges.push(w.id); reward(20,10,innerWidth/2,innerHeight/2); save(); setTimeout(confetti,200);}
+    const firsts=w.checks.filter((c,j)=>S.ans[w.id+"-"+j]?.first).length;
+    body=`<div class="card badgepop"><div class="b">${w.badge}</div><h2>You earned the ${w.badgeName} badge!</h2>
+      <p>First-try correct: <b>${firsts} / ${w.checks.length}</b> • Bonus: +20 XP, +10 🪙</p>
+      <div class="ican" style="justify-content:center"><span class="ic">✅</span><div><b>I can</b> ${esc(w.ican.replace(/^I can /,""))}</div></div>
+      ${i<WORLDS.length-1?`<button class="big" data-world="${i+1}">Next World ➜</button>`:`<button class="big" data-boss style="background:#b91c1c;box-shadow:0 5px 0 #7f1d1d">⚔️ Face the FAST Boss!</button>`}
+      <button class="big alt" data-go="map">🗺️ Map</button></div>`;
+  }
+  V().innerHTML=hdr+body;
+  wireTeach();
+}
+function qHTML(w,j){
+  const c=w.checks[j], k=w.id+"-"+j, a=S.ans[k]||{tries:[],done:false}, hint=S.hints[k], ord=order(c.o.length,seedOf(k)), cl=String.fromCharCode(65+ord.indexOf(c.a));
+  let h=`<div class="q" id="q-${k}"><div class="qt">${j+1}. ${esc(c.q)}</div>
+   <button class="say" data-say="#q-${k} .qt">🔊 Read Question</button><button class="say" data-say="#q-${k} .opts">🔊 Read Choices</button>
+   ${!a.done&&!hint?`<button class="hint" data-hint="${k}">💡 Hint</button>`:""}
+   ${hint?`<div class="hintbox">💡 ${esc(c.hint)}</div>`:""}
+   <div class="opts">${ord.map((n,pos)=>{const o=c.o[n]; let cls="opt"; if(a.tries.includes(n)) cls+= n===c.a?" right":" wrong"; else if(a.done&&n===c.a) cls+=" reveal";
+     return `<button class="${cls}" data-q="${k}" data-n="${n}" ${a.done||a.tries.includes(n)?"disabled":""}>${String.fromCharCode(65+pos)}. ${esc(o)}</button>`}).join("")}</div>`;
+  if(a.done){ const ok=a.tries.includes(c.a);
+    h+=`<div class="fb ${ok?"good":"bad"}">${ok?(a.first?"🌟 Correct on the first try!":"✅ You got it!"):"📘 The correct answer is <b>"+cl+"</b>."} ${esc(c.why)}</div>`;
+  } else if(a.tries.length===1){
+    h+=`<div class="fb try">🤔 Not quite, but you've got one more try! <b>Teaching tip:</b> ${esc(c.hint)}</div>`;
+  }
+  return h+"</div>";
+}
+function wireTeach(){
+  if($("#chain")) setTimeout(()=>$("#chain")&&$("#chain").classList.add("play"),500);
+  const pc=$("#playChain"); if(pc) pc.onclick=()=>{const ch=$("#chain"); ch.classList.remove("play"); void ch.offsetWidth; ch.classList.add("play"); speak("Action. A character says or does something. Reaction. Another character responds. Plot change. A problem starts, grows, or gets solved.");};
+  document.querySelectorAll("[data-stage]").forEach(s=>s.onclick=()=>{s.classList.add("grown"); speak(s.querySelector(".st").innerText);});
+  document.querySelectorAll(".fcard").forEach(f=>f.onclick=()=>{f.classList.toggle("flip"); if(f.classList.contains("flip")) speak(f.querySelector(".fn").innerText+". "+f.querySelector(".bk").innerText);});
+  const cam=$("#cam");
+  if(cam){ const lens=$("#lens"), chars=[...cam.querySelectorAll(".ch")];
+    const info={first:{t:[0],x:"<b>1st person (Mia):</b> \"I stared at the crack and blamed him in my head.\" We only see <b>Mia's</b> thoughts. Leo's feelings stay hidden behind his door."},
+      third:{t:[1],x:"<b>3rd person limited (Leo):</b> \"Leo hid under his blanket, sure his sister hated him.\" Now we see <b>Leo's</b> thoughts, but not Mia's."},
+      omni:{t:[0,1,2],x:"<b>3rd person omniscient:</b> The narrator knows <b>everyone's</b> thoughts. Mia felt angry, Leo felt ashamed, and Grandma felt sad about Grandpa's lens."},
+      grandma:{t:[2],x:"<b>Shift to Grandma:</b> \"I heard the crash and my heart sank. That lens held forty years of starry nights.\" A new narrator shows <b>new feelings</b> readers didn't know before!"}};
+    const place=(p)=>{const r=cam.getBoundingClientRect(); const tg=info[p].t.map(n=>chars[n].getBoundingClientRect());
+      if(tg.length===3){lens.style.width=(r.width-30)+"px"; lens.style.left="15px"; lens.style.height="110px"; lens.style.borderRadius="40px";}
+      else{const c=tg[0]; lens.style.width="110px"; lens.style.height="110px"; lens.style.borderRadius="50%"; lens.style.left=(c.left-r.left+c.width/2-55)+"px";}
+      $("#camtxt").innerHTML=info[p].x; cam.querySelectorAll("[data-pov]").forEach(b=>b.classList.toggle("on",b.dataset.pov===p)); speak($("#camtxt").innerText);};
+    lens.style.left="-200px";
+    cam.querySelectorAll("[data-pov]").forEach(b=>b.onclick=()=>place(b.dataset.pov));
+  }
+  const sb=$("#sylBox");
+  if(sb){ const lines=[["Cracked","lens,","glued","with","care"],["two","small","hands","lift","it","sky","ward"],["the","moon","still","shines","through"]];
+    sb.innerHTML=lines.map((l,i)=>`<div style="display:flex;align-items:center;gap:8px"><span class="sylcount" id="sc${i}">0</span><div class="syl">${l.map(s=>`<span>${s}</span>`).join("")}</div></div>`).join("");
+    $("#countSyl").onclick=()=>{ const spans=[...sb.querySelectorAll(".syl span")]; spans.forEach(s=>s.classList.remove("lit")); [0,1,2].forEach(i=>$("#sc"+i).textContent="0");
+      let t=0; lines.forEach((l,i)=>{ l.forEach((s,k)=>{ setTimeout(()=>{ sb.querySelectorAll(".syl")[i].children[k].classList.add("lit"); $("#sc"+i).textContent=k+1; },t+=320);}); t+=300; });
+      setTimeout(()=>speak("Five. Seven. Five. That is a haiku!"),t+200); };
+  }
+}
+/* =================== BOSS =================== */
+function vBoss(){
+  if(!WORLDS.every((w,i)=>worldDone(i))) return go("map");
+  const answered=Object.keys(S.boss).length, hits=BOSS.filter((b,i)=>S.boss[i]===b.a).length;
+  const hp=Math.max(0,100-hits/BOSS.length*100);
+  V().innerHTML=`<div class="boss" id="bossTop"><div style="font-weight:800;letter-spacing:2px">⚔️ FAST BOSS BATTLE</div>
+    <div class="bossface" id="bossFace">${answered===BOSS.length?(hits>=6?"😵":"🐲"):"🐲"}</div>
+    <div>The Plot Dragon • HP</div><div class="hp"><div class="hpfill" style="width:${hp}%"></div></div>
+    <div>Each correct answer hits the dragon! 💥 <b>${hits}</b> hits • Answered ${answered} / ${BOSS.length}</div></div>
+   <div class="dir">⚔️ <b>Boss rules:</b> Read the story and the poem. <b>One try</b> per question, just like the real FAST. No hints, but you can reread!</div>
+   <div class="card">${storyHTML(BOSS_STORY,true)}${poemHTML(BOSS_POEM,"boss")}</div>
+   <div class="card">${BOSS.map((b,i)=>{const ch=S.boss[i];
+     return `<div class="q" id="bq-${i}"><div class="qt">${i+1}. ${esc(b.q)}</div>
+      <button class="say" data-say="#bq-${i} .qt">🔊 Read Question</button><button class="say" data-say="#bq-${i} .opts">🔊 Read Choices</button>
+      <div class="opts">${order(b.o.length,seedOf("boss"+i)).map((n,pos)=>{const o=b.o[n]; let cls="opt"; if(ch!==undefined){ if(n===ch) cls+= n===b.a?" right":" wrong"; else if(n===b.a) cls+=" reveal";}
+        return `<button class="${cls}" data-bq="${i}" data-n="${n}" ${ch!==undefined?"disabled":""}>${String.fromCharCode(65+pos)}. ${esc(o)}</button>`}).join("")}</div>
+      ${ch!==undefined?`<div class="fb ${ch===b.a?"good":"bad"}">${ch===b.a?"💥 Direct hit!":"🛡️ The dragon blocked it! The answer was <b>"+String.fromCharCode(65+order(b.o.length,seedOf("boss"+i)).indexOf(b.a))+"</b>."}</div>`:""}</div>`}).join("")}
+    <button class="big" id="finishBoss" ${answered===BOSS.length?"":"disabled"}>${answered===BOSS.length?"🏆 See My Results":"Answer all 8 to finish"}</button></div>`;
+  const fb=$("#finishBoss"); fb.onclick=()=>{ if(!S.bossDone){S.bossDone=true; reward(30,15,innerWidth/2,innerHeight/2);} go("results"); };
+}
+/* =================== RESULTS =================== */
+function vResults(){
+  if(!S.bossDone) return go("map");
+  const rows=WORLDS.map(w=>{const ck=w.checks.filter((c,j)=>S.ans[w.id+"-"+j]?.first).length; const bs=BOSS.map((b,i)=>[b,i]).filter(([b])=>b.std===w.id); const bc=bs.filter(([b,i])=>S.boss[i]===b.a).length;
+    return {w,ck,ckT:w.checks.length,bc,bT:bs.length};});
+  const bossScore=BOSS.filter((b,i)=>S.boss[i]===b.a).length;
+  const checkScore=rows.reduce((a,r)=>a+r.ck,0), checkT=rows.reduce((a,r)=>a+r.ckT,0);
+  const missed=BOSS.map((b,i)=>S.boss[i]!==b.a?`Boss #${i+1}`:null).filter(Boolean);
+  const needs=rows.filter(r=>r.bc<r.bT).map(r=>r.w.title);
+  V().innerHTML=`<div class="card" style="text-align:center"><div class="badgepop"><div class="b">${S.avatar}</div></div>
+   <h2>${esc(S.name||"Reader")}, Quest Complete! 🎉</h2>
+   <p style="font-family:Fredoka;font-size:24px">${title()} • Level ${level()} • ${S.xp} XP • 🪙 ${S.coins}</p>
+   <div style="font-family:Fredoka;font-size:52px">Boss: ${bossScore} / ${BOSS.length}</div>
+   <p>First-try checks: <b>${checkScore} / ${checkT}</b></p>
+   <table class="rt"><tr><th>Standard</th><th>I Can</th><th>Checks</th><th>Boss</th></tr>
+   ${rows.map(r=>`<tr><td><b>${r.w.std}</b><br>${r.w.emoji} ${r.w.title}</td><td style="font-size:15px">${esc(r.w.ican)}</td><td>${r.ck}/${r.ckT}</td><td>${r.bc}/${r.bT} ${r.bc===r.bT?"✅":"🔁"}</td></tr>`).join("")}</table>
+   <p><b>❌ Missed:</b> ${missed.length?missed.join(", "):"None! 🌟"}</p>
+   ${needs.length?`<p>🔁 <b>Review again:</b> ${needs.join(", ")}. Tap the world on the map to rewatch the lesson.</p>`:"<p>🌟 You showed mastery of every standard!</p>"}
+   <div class="blist">${WORLDS.map(w=>`<span class="${S.badges.includes(w.id)?"":"no"}">${w.badge} ${w.badgeName}</span>`).join("")}<span>🏆 Boss Slayer</span></div>
+   <p style="font-weight:800;margin-top:14px">📸 Take a screenshot of this page and upload it to the Canvas module!</p>
+   <p style="font-size:14px;color:#6b6584">Completed ${new Date().toLocaleDateString()}</p>
+   <button class="big alt" data-go="map">🗺️ Back to Map</button></div>`;
+  confetti();
+}
+
+/* =================== EVENTS =================== */
+document.addEventListener("click",e=>{
+  const t=e.target;
+  const wb=t.closest("[data-world]"); if(wb && !wb.classList.contains("locked")){ go("w"+(+wb.dataset.world+1)); return; }
+  const bb=t.closest("[data-boss]"); if(bb && !bb.classList.contains("locked")){ go("boss"); return; }
+  const gv=t.closest("[data-go]"); if(gv){ go(gv.dataset.go); return; }
+  const st=t.closest("[data-step]"); if(st && !st.disabled){ const i=+S.view.slice(1)-1; S.step[WORLDS[i].id]=+st.dataset.step; save(); render(); window.scrollTo({top:0,behavior:"smooth"}); return; }
+  const hb=t.closest("[data-hint]"); if(hb){ S.hints[hb.dataset.hint]=true; save(); refreshChecks(); speak(document.querySelector("#q-"+hb.dataset.hint+" .hintbox").innerText); return; }
+  const qb=t.closest("[data-q]");
+  if(qb && !qb.disabled){
+    const k=qb.dataset.q, n=+qb.dataset.n, [wid,j]=k.split("-"), w=WORLDS.find(x=>x.id===wid), c=w.checks[+j];
+    const a=S.ans[k]||{tries:[],done:false,first:false}; if(a.done) return;
+    a.tries.push(n);
+    if(n===c.a){ a.done=true; a.first=a.tries.length===1&&!S.hints[k];
+      const xp=a.tries.length===1?(S.hints[k]?7:10):5, co=a.tries.length===1?5:2;
+      S.streak++; S.best=Math.max(S.best,S.streak); reward(xp,co,e.clientX,e.clientY); miniBurst(e.clientX,e.clientY);
+    } else { S.streak=0; if(a.tries.length>=2) a.done=true; }
+    S.ans[k]=a; save(); hud(); refreshChecks();
+    const box=document.getElementById("q-"+k); if(n!==c.a&&box){box.classList.add("shake");}
+    const fbEl=box&&box.querySelector(".fb"); if(fbEl) speak(fbEl.innerText);
+    return;
+  }
+  const bq=t.closest("[data-bq]");
+  if(bq && !bq.disabled){
+    const i=+bq.dataset.bq, n=+bq.dataset.n; if(S.boss[i]!==undefined) return;
+    S.boss[i]=n; const ok=n===BOSS[i].a;
+    if(ok){ S.streak++; reward(10,5,e.clientX,e.clientY); miniBurst(e.clientX,e.clientY);} else S.streak=0;
+    save(); const y=scrollY; vBoss(); scrollTo(0,y); hud();
+    if(ok){ const f=$("#bossFace"); f.classList.add("hit"); }
+    return;
+  }
+  if(t.id==="shopBtn"){ renderShop(); $("#shop").classList.add("on"); return; }
+  if(t.id==="shopClose"||t.id==="shop"){ $("#shop").classList.remove("on"); return; }
+  if(t.id==="mapBtn"){ if(S.name.trim()) go("map"); else go("start"); return; }
+  const buy=t.closest("[data-buy]");
+  if(buy){ const it=SHOP[+buy.dataset.buy];
+    if(S.owned.includes(it.e)){ S.avatar=it.e; } else if(S.coins>=it.c){ S.coins-=it.c; S.owned.push(it.e); S.avatar=it.e; miniBurst(innerWidth/2,innerHeight/2); }
+    save(); hud(); renderShop(); return; }
+});
+function refreshChecks(){ const i=+S.view.slice(1)-1, w=WORLDS[i]; const box=$("#checks"); if(!box) return;
+  box.innerHTML=w.checks.map((c,j)=>qHTML(w,j)).join("");
+  const tb=$("#toBadge"); if(tb){ const d=worldDone(i); tb.disabled=!d; tb.textContent=d?"Claim My Badge! 🏅":"Answer all checks to continue"; if(d) tb.classList.add("shake"); } }
+function renderShop(){ $("#sCoins").textContent=S.coins;
+  $("#shopGrid").innerHTML=SHOP.map((it,i)=>{const own=S.owned.includes(it.e); const on=S.avatar===it.e;
+    return `<div class="item"><div class="ie">${it.e}</div><b>${it.n}</b><br>${own?(on?"✅ Wearing":`<button data-buy="${i}">Wear</button>`):`<button data-buy="${i}" ${S.coins<it.c?"disabled":""}>🪙 ${it.c}</button>`}</div>`}).join(""); }
+
+/* =================== CONFETTI =================== */
+const cv=$("#confetti"), cx=cv.getContext("2d"); let parts=[], anim=null;
+function sz(){cv.width=innerWidth; cv.height=innerHeight;} sz(); addEventListener("resize",sz);
+const COLS=["#f97316","#ef4444","#7c3aed","#0d9488","#2563eb","#facc15","#16a34a","#db2777"];
+function add(n,x,y,sp){for(let i=0;i<n;i++)parts.push({x:x??Math.random()*cv.width,y:y??-20,vx:(Math.random()-.5)*sp,vy:y!=null?Math.random()*-8-2:Math.random()*3+2,r:Math.random()*7+4,c:COLS[i%8],a:Math.random()*6,va:(Math.random()-.5)*.3,l:0}); if(!anim)loop();}
+function loop(){cx.clearRect(0,0,cv.width,cv.height); parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.15;p.a+=p.va;p.l++;cx.save();cx.translate(p.x,p.y);cx.rotate(p.a);cx.fillStyle=p.c;cx.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6);cx.restore();});
+ parts=parts.filter(p=>p.y<cv.height+30&&p.l<420); anim=parts.length?requestAnimationFrame(loop):null; if(!anim)cx.clearRect(0,0,cv.width,cv.height);}
+function miniBurst(x,y){add(24,x,y,10);}
+function confetti(){let k=0; const t=setInterval(()=>{add(60,null,null,6); if(++k>6)clearInterval(t);},250);}
+
+render();
+</script>
+</body>
+</html>
